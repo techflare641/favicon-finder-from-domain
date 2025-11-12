@@ -197,7 +197,10 @@ function App() {
         <div className="instructions">
           <h3>Instructions</h3>
           <ol>
-            <li>Upload a CSV file with domains (format: rank,domain)</li>
+            <li>
+              Upload a CSV file with domains (two columns: rank, domain; no
+              header row)
+            </li>
             <li>Click "Find Favicons" to process</li>
             <li>Download the results CSV with favicon URLs</li>
           </ol>

@@ -26,9 +26,9 @@ VITE_API_URL=http://localhost:3001
 
 ## Features
 
-- CSV file upload
-- Processing status display
-- Results statistics
-- Automatic CSV download
-- Responsive design
+- CSV file upload (supports files without headers)
+- Real-time processing status display
+- Results statistics (found, not found, errors)
+- Automatic CSV download with results
+- Modern, responsive UI design
 

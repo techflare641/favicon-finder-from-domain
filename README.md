@@ -102,10 +102,15 @@ The frontend will run on `http://localhost:3000`
 ## CSV Format
 
 ### Input Format
+The input CSV file should NOT have a header row. Each row should contain:
+- Column 1: Rank (numeric)
+- Column 2: Domain name
+
+Example:
 ```csv
-rank,domain
 1,google.com
 2,youtube.com
+3,facebook.com
 ```
 
 ### Output Format
@@ -146,7 +151,7 @@ The application uses concurrent processing with a configurable batch size (defau
 ## Project Structure
 
 ```
-fullstack-favicon-finder-project/
+find-favicon/
 ├── backend/
 │   ├── src/
 │   │   ├── index.ts              # Express server setup
@@ -163,7 +168,6 @@ fullstack-favicon-finder-project/
 │   ├── package.json
 │   └── vite.config.ts
 ├── favicon-finder-top-1k-domains.csv  # Input file
-├── favicons.csv                        # Output file (generated)
 └── README.md
 ```
 
@@ -259,7 +263,7 @@ Given more time, potential improvements could include:
 
 **"No file uploaded" error:**
 - Ensure you're selecting a valid CSV file
-- Check that the CSV follows the correct format (rank,domain)
+- Check that the CSV follows the correct format (no header, two columns: rank and domain)
 
 ## License
 

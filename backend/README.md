@@ -20,25 +20,7 @@ npm run dev
 
 ### Test a Single Domain
 
-The easiest way to test and debug favicon finding for a specific domain:
-
-```bash
-# Test google.com
-npm run test:domain google.com
-
-# Test multiple domains
-npm run test:domain google.com youtube.com facebook.com
-```
-
-This will show detailed debug logs including:
-- HTTP requests made
-- HTML selectors tried
-- URLs found and parsed
-- Final result and duration
-
-### Using the Debug API Endpoint
-
-When the server is running, you can also test via HTTP:
+When the server is running, you can test a single domain via the debug API endpoint:
 
 ```bash
 # GET request
@@ -65,29 +47,6 @@ http://localhost:3001/api/test-domain/google.com
   }
 }
 ```
-
-### Debug Output Example
-
-```
-================================================================================
-Testing domain: google.com
-================================================================================
-[DEBUG google.com] Trying protocol: https
-[DEBUG google.com] Fetching HTML from: https://google.com
-[DEBUG google.com] HTML fetched successfully, status: 200
-[DEBUG google.com] Base URL: https://www.google.com/
-[DEBUG google.com] Searching for favicon in HTML with 9 selectors
-[DEBUG google.com] Selector "link[rel="icon"]" found 1 elements
-[DEBUG google.com]   Element 0: href/content = "//www.gstatic.com/images/branding/searchlogo/ico/favicon.ico"
-[DEBUG google.com]   Converted protocol-relative: https://www.gstatic.com/images/branding/searchlogo/ico/favicon.ico
-[DEBUG google.com] ✓ Found favicon URL: https://www.gstatic.com/images/branding/searchlogo/ico/favicon.ico
-================================================================================
-Result: https://www.gstatic.com/images/branding/searchlogo/ico/favicon.ico
-Duration: 1234ms
-================================================================================
-```
-
-For more details, see [DEBUG.md](./DEBUG.md)
 
 ## API Endpoints
 
@@ -177,9 +136,7 @@ Health check endpoint.
 backend/
 ├── src/
 │   ├── index.ts              # Express server with API endpoints
-│   ├── faviconFinder.ts      # Core favicon finding logic
-│   └── test-single-domain.ts # Standalone test script
-├── DEBUG.md                  # Detailed debugging guide
+│   └── faviconFinder.ts      # Core favicon finding logic
 └── README.md                 # This file
 ```
 
@@ -200,6 +157,5 @@ backend/
 ✅ Protocol-relative URL support  
 ✅ Concurrent request processing  
 ✅ Configurable timeouts and batch sizes  
-✅ Debug API endpoints for testing  
-✅ Standalone test script
+✅ Debug API endpoints for testing
 
