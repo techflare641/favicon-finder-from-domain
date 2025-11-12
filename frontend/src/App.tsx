@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { io, Socket } from 'socket.io-client';
 import './App.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -11,12 +12,60 @@ interface Stats {
   errors: number;
 }
 
+interface FaviconResult {
+  rank: number;
+  domain: string;
+  favicon_url: string;
+  status: string;
+  error?: string;
+}
+
+interface ProgressData {
+  processed: number;
+  total: number;
+  percentage: string;
+  lastResult: FaviconResult;
+}
+
 function App() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [processingTime, setProcessingTime] = useState<number | null>(null);
+  const [progress, setProgress] = useState<ProgressData | null>(null);
+  const [recentFavicons, setRecentFavicons] = useState<FaviconResult[]>([]);
+  const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    // Initialize Socket.IO connection
+    const socket = io(API_URL);
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      console.log('WebSocket connected:', socket.id);
+    });
+
+    socket.on('progress', (data: ProgressData) => {
+      setProgress(data);
+
+      // Add to recent favicons if found
+      if (data.lastResult.status === 'found' && data.lastResult.favicon_url) {
+        setRecentFavicons((prev) => {
+          const updated = [data.lastResult, ...prev].slice(0, 20); // Keep last 20
+          return updated;
+        });
+      }
+    });
+
+    socket.on('disconnect', () => {
+      console.log('WebSocket disconnected');
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -29,6 +78,8 @@ function App() {
       setError(null);
       setStats(null);
       setProcessingTime(null);
+      setProgress(null);
+      setRecentFavicons([]);
     }
   };
 
@@ -43,6 +94,8 @@ function App() {
     setLoading(true);
     setError(null);
     setStats(null);
+    setProgress(null);
+    setRecentFavicons([]);
 
     const formData = new FormData();
     formData.append('file', file);
@@ -50,8 +103,11 @@ function App() {
     const startTime = Date.now();
 
     try {
+      // Pass socket ID to enable real-time updates
+      const socketId = socketRef.current?.id || '';
+
       const response = await axios.post(
-        `${API_URL}/api/process-csv`,
+        `${API_URL}/api/process-csv?socketId=${socketId}`,
         formData,
         {
           responseType: 'blob',
@@ -148,10 +204,73 @@ function App() {
           </button>
         </form>
 
-        {loading && (
+        {loading && progress && (
+          <div className="progress-section">
+            <div className="progress-header">
+              <h2>Processing Domains...</h2>
+              <div className="progress-percentage">{progress.percentage}%</div>
+            </div>
+
+            <div className="progress-bar-container">
+              <div
+                className="progress-bar"
+                style={{ width: `${progress.percentage}%` }}
+              ></div>
+            </div>
+
+            <div className="progress-stats">
+              <div className="progress-stat">
+                <span className="label">Processed:</span>
+                <span className="value">
+                  {progress.processed} / {progress.total}
+                </span>
+              </div>
+              <div className="progress-stat">
+                <span className="label">Rate:</span>
+                <span className="value">
+                  {progress.processed > 0
+                    ? (
+                        (progress.processed /
+                          ((Date.now() - Date.now()) / 1000 || 1)) *
+                        1
+                      ).toFixed(1)
+                    : '0'}{' '}
+                  domains/sec
+                </span>
+              </div>
+            </div>
+
+            {recentFavicons.length > 0 && (
+              <div className="recent-favicons">
+                <h3>Recently Found Favicons</h3>
+                <div className="favicon-grid">
+                  {recentFavicons.slice(0, 12).map((result, idx) => (
+                    <div
+                      key={`${result.domain}-${idx}`}
+                      className="favicon-item"
+                    >
+                      <img
+                        src={result.favicon_url}
+                        alt={result.domain}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                      <span className="favicon-domain" title={result.domain}>
+                        {result.domain}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {loading && !progress && (
           <div className="status">
             <div className="spinner"></div>
-            <p>Processing domains... This may take a few minutes.</p>
+            <p>Initializing... This may take a moment.</p>
           </div>
         )}
 
